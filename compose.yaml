@@ -1,0 +1,62 @@
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: test2024
+      MYSQL_DATABASE: microservices_db
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test2024
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: test
+      RABBITMQ_DEFAULT_PASS: test2024
+    networks:
+      - backend
+
+  microservicio-clientes:
+    build:
+      context: ./microservicio-clientes
+    container_name: microservicio-clientes
+    ports:
+      - "8081:8080"
+    networks:
+      - backend
+    depends_on:
+      - mysql
+      - rabbitmq
+    command: tail -f /dev/null
+
+  microservicio-cuentas:
+    build:
+      context: ./microservicio-cuentas
+    container_name: microservicio-cuentas
+    ports:
+      - "8082:8080"
+    networks:
+      - backend
+    depends_on:
+      - mysql
+      - rabbitmq
+      - microservicio-clientes
+    command: tail -f /dev/null
+
+volumes:
+  mysql-data:
+
+networks:
+  backend:
+    driver: bridge
